@@ -1,0 +1,108 @@
+using System;
+using System.Collections.Generic;
+
+interface IOrder<T>
+{
+    void AddProduct(T product);
+    void RemoveProduct(T product);
+    double GetTotalCost();
+}
+
+class Order<T> : IOrder<T>
+{
+    private List<T> products = new List<T>();
+    public event EventHandler<string> OrderStatusChanged;
+
+    public void AddProduct(T product)
+    {
+        products.Add(product);
+        OrderStatusChanged?.Invoke(this, "Product added to order");
+    }
+
+    public void RemoveProduct(T product)
+    {
+        products.Remove(product);
+        OrderStatusChanged?.Invoke(this, "Product removed from order");
+    }
+
+    public double GetTotalCost()
+    {
+        double totalCost = 0;
+        foreach (var product in products)
+        {
+            if (product is Product)
+            {
+                totalCost += ((Product)(object)product).Price;
+            }
+        }
+        return totalCost;
+    }
+
+    ~Order()
+    {
+    }
+}
+class Product
+{
+    public string Name { get; set; }
+    public double Price { get; set; }
+
+    public Product(string name, double price)
+    {
+        Name = name;
+        Price = price;
+    }
+    ~Product()
+    {
+    }
+}
+
+class FoodProduct : Product
+{
+    public DateTime ExpiryDate { get; set; }
+
+    public FoodProduct(string name, double price, DateTime expiryDate)
+        : base(name, price)
+    {
+        ExpiryDate = expiryDate;
+    }
+    ~FoodProduct()
+    {
+    }
+}
+
+class ElectronicProduct : Product
+{
+    public string Manufacturer { get; set; }
+
+    public ElectronicProduct(string name, double price, string manufacturer)
+        : base(name, price)
+    {
+        Manufacturer = manufacturer;
+    }
+    ~ElectronicProduct()
+    {
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        Order<Product> order = new Order<Product>();
+
+        order.OrderStatusChanged += (sender, status) =>
+        {
+            Console.WriteLine($"Order status: {status}");
+        };
+
+        order.AddProduct(new FoodProduct("Cake", 124, DateTime.Now.AddDays(15)));
+        order.AddProduct(new ElectronicProduct("Phone", 34000, "Apple"));
+
+        order.RemoveProduct(new FoodProduct("Cake", 124, DateTime.Now.AddDays(15)));
+
+        double totalCost = order.GetTotalCost();
+        Console.WriteLine($"Total cost of the order: {totalCost}");
+
+    }
+}
